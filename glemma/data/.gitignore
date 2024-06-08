@@ -1,0 +1,10 @@
+adjectives.json
+adverbs.json
+nouns.json
+nouns-nbc-top100.pickle
+nouns_stat_rules-100.pickle
+nouns_stat_rules-95.pickle
+nouns_stat_rules-99.pickle
+prefixes.json
+third-party/
+verbs.json
