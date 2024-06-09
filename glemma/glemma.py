@@ -5,6 +5,7 @@ import pickle
 
 import pandas as pd
 import numpy as np
+from pathlib import Path
 
 def get_verb_lemma_fwdsearch(word, query_verb_dict_fnc, use_longest_subword=True):
 
@@ -251,8 +252,6 @@ class GLemma():
 
     Parameters
     ----------
-    lemmatizer_data_path : str
-        Data path to the lemmatizer files.
 
     use_nouns_nbc : bool, default=False
         Use Naive Bayes classifier for unknown nouns.
@@ -288,18 +287,19 @@ class GLemma():
     lemmas that it's 100% sure about.
     """
 
-    def __init__(self, lemmatizer_data_path, use_nouns_nbc=False, nouns_statrules_acc = 95, guess_adj_lemmas=True, wordfreq_csv=None):
+    def __init__(self, use_nouns_nbc=False, nouns_statrules_acc = 95, guess_adj_lemmas=True, wordfreq_csv=None):
 
-
-        with open(os.path.join(lemmatizer_data_path,'vocab.json'), 'rt', encoding='UTF-8') as json_file:
+        lemmatizer_data_path = Path(__file__).parent.resolve() / 'data'
+        
+        with open(lemmatizer_data_path / 'vocab.json', 'rt', encoding='UTF-8') as json_file:
             self.vocab = json.load(json_file)
 
         if use_nouns_nbc:
-            self.nouns_nbc = NounsNBC(os.path.join(lemmatizer_data_path,'nouns-nbc-top100.pickle'))
+            self.nouns_nbc = NounsNBC(lemmatizer_data_path / 'nouns-nbc-top100.pickle')
         else:
             self.nouns_nbc = None
 
-        self.nouns_stat_rules = NounsStatRules(os.path.join(lemmatizer_data_path,f'nouns_stat_rules-{nouns_statrules_acc}.pickle'))
+        self.nouns_stat_rules = NounsStatRules(lemmatizer_data_path / f'nouns_stat_rules-{nouns_statrules_acc}.pickle')
     
         if wordfreq_csv:
             self.wordfreq = pd.read_csv(wordfreq_csv, sep=' ', names=['word','freq'])
@@ -350,7 +350,7 @@ class GLemma():
                 
         return None
 
-    def filter_verb_lemmas(self, lemmas, spacy_token):
+    def filter_verb_lemmas(self, word, lemmas, spacy_token):
 
         if spacy_token is None:
             return None
@@ -366,7 +366,7 @@ class GLemma():
             #werden is an auxiliary verb for Passiv or Futur, 
             #the wordform should be Partizip II (Passiv) or the same as lemma (Futur)
             lemmas = [x for x in lemmas if x['connection']=='Partizip II' 
-                                or x['lemma']==spacy_token.text.lower()]
+                                or x['lemma']==word]
         else:
             #no evidence for Perfekt or Passiv, so the wordform can't be Partizip II
             lemmas = [x for x in lemmas if not x['connection']=='Partizip II']
@@ -400,7 +400,7 @@ class GLemma():
                     lemmas = [lemma for lemma in lemmas if (lemma['genus'],lemma['declination']) in constraints]
                 
             elif pos=='V':
-                lemmas = self.filter_verb_lemmas(lemmas, spacy_token)
+                lemmas = self.filter_verb_lemmas(word, lemmas, spacy_token)
                 
         lemmas = list(set([x['lemma'] for x in lemmas])) #remove all meta info, take unique words
         

@@ -55,8 +55,7 @@ As German word frequency list, one could use [FrequencyWords](https://github.com
 ```
 from glemma.glemma import GLemma
 
-lemmatizer = GLemma('glemma/data', 
-                    wordfreq_csv='glemma/data/third-party/FrequencyWords/content/2018/de/de_full.txt',
+lemmatizer = GLemma(wordfreq_csv='glemma/data/third-party/FrequencyWords/content/2018/de/de_full.txt',
                     use_nouns_nbc=False)
 
 #lemmatizer(spacy_token=token)
